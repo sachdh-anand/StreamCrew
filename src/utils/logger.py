@@ -19,23 +19,61 @@ init()
 # Regular expression to match ANSI escape sequences
 ANSI_ESCAPE_PATTERN = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
+# Regular expression to match emoji characters (a basic version)
+EMOJI_PATTERN = re.compile(
+    "["
+    "\U0001F600-\U0001F64F"  # emoticons
+    "\U0001F300-\U0001F5FF"  # symbols & pictographs
+    "\U0001F680-\U0001F6FF"  # transport & map symbols
+    "\U0001F700-\U0001F77F"  # alchemical symbols
+    "\U0001F780-\U0001F7FF"  # Geometric Shapes
+    "\U0001F800-\U0001F8FF"  # Supplemental Arrows-C
+    "\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+    "\U0001FA00-\U0001FA6F"  # Chess Symbols
+    "\U0001FA70-\U0001FAFF"  # Symbols and Pictographs Extended-A
+    "\U00002702-\U000027B0"  # Dingbats
+    "\U000024C2-\U0001F251" 
+    "]+")
+
 # Set to track messages already logged to prevent duplicates
 LOGGED_MESSAGES: Set[str] = set()
 
 class LogSymbols:
     """Symbols for different log levels and states."""
-    DEBUG = "🔍"
-    INFO = "ℹ️ "
-    SUCCESS = "✅"
-    WARNING = "⚠️ "
-    ERROR = "❌"
-    CRITICAL = "🚨"
-    START = "▶️ "
-    END = "⏹️ "
-    DIVIDER = "━"
-    TEST = "🧪"
-    API = "🌐"
-    MODEL = "🤖"
+    # Use plain ASCII characters instead of emojis for Windows compatibility
+    DEBUG = "[DEBUG]"
+    INFO = "[INFO]"
+    SUCCESS = "[SUCCESS]"
+    WARNING = "[WARNING]"
+    ERROR = "[ERROR]"
+    CRITICAL = "[CRITICAL]"
+    START = "[START]"
+    END = "[END]"
+    DIVIDER = "-"
+    TEST = "[TEST]"
+    API = "[API]"
+    MODEL = "[MODEL]"
+
+def clean_text(text: str) -> str:
+    """Remove ANSI escape sequences and emoji characters from text."""
+    # First remove ANSI escape sequences
+    text = ANSI_ESCAPE_PATTERN.sub('', text)
+    
+    # Then remove emoji characters
+    text = EMOJI_PATTERN.sub('', text)
+    
+    # Handle specific problematic Unicode characters that may not be caught by the emoji pattern
+    text = text.replace('\U0001f680', '')  # rocket emoji
+    text = text.replace('\u274c', '')      # red X mark
+    text = text.replace('\u2705', '')      # white check mark
+    text = text.replace('\u2728', '')      # sparkles
+    text = text.replace('\u26a0', '')      # warning sign
+    text = text.replace('\u2757', '')      # exclamation mark
+    
+    # Replace other non-ASCII characters with their closest ASCII equivalent or empty string
+    text = ''.join(c if ord(c) < 128 else '' for c in text)
+    
+    return text
 
 class ConsoleFormatter(logging.Formatter):
     """Formatter for console output with colors."""
@@ -88,14 +126,19 @@ class ConsoleFormatter(logging.Formatter):
         # Save original message
         original_msg = record.msg
         
-        if 'LLM' in original_msg:
-            record.msg = f"{LogSymbols.MODEL} {original_msg}"
-        elif 'API' in original_msg:
-            record.msg = f"{LogSymbols.API} {original_msg}"
-        elif 'TEST' in original_msg:
-            record.msg = f"{LogSymbols.TEST} {original_msg}"
-        else:
-            record.msg = f"{log_symbol} {original_msg}"
+        # Replace emojis with plain text alternatives in the message
+        if isinstance(original_msg, str):
+            # Clean the message - remove emojis
+            original_msg = clean_text(original_msg)
+            
+            if 'LLM' in original_msg:
+                record.msg = f"{LogSymbols.MODEL} {original_msg}"
+            elif 'API' in original_msg:
+                record.msg = f"{LogSymbols.API} {original_msg}"
+            elif 'TEST' in original_msg:
+                record.msg = f"{LogSymbols.TEST} {original_msg}"
+            else:
+                record.msg = f"{log_symbol} {original_msg}"
         
         record.formatted = True
         result = super().format(record)
@@ -121,8 +164,8 @@ class FileFormatter(logging.Formatter):
         # Check if message already contains formatting
         if hasattr(record, 'formatted') and record.formatted:
             formatted_message = super().format(record)
-            # Strip ANSI escape sequences for file output
-            return ANSI_ESCAPE_PATTERN.sub('', formatted_message)
+            # Clean the message of ANSI and emojis
+            return clean_text(formatted_message)
         
         log_symbol = self.SYMBOLS.get(record.levelname, "")
         
@@ -130,19 +173,23 @@ class FileFormatter(logging.Formatter):
         original_levelname = record.levelname
         original_msg = record.msg
         
-        # Check if this is a TERMINAL: message to avoid double formatting
-        if isinstance(original_msg, str) and original_msg.startswith("TERMINAL:"):
-            # Just clean ANSI sequences and pass through
-            record.msg = original_msg
-        else:
-            if 'LLM' in original_msg:
-                record.msg = f"{LogSymbols.MODEL} {original_msg}"
-            elif 'API' in original_msg:
-                record.msg = f"{LogSymbols.API} {original_msg}"
-            elif 'TEST' in original_msg:
-                record.msg = f"{LogSymbols.TEST} {original_msg}"
+        # Clean the message of emojis
+        if isinstance(original_msg, str):
+            original_msg = clean_text(original_msg)
+            
+            # Check if this is a TERMINAL: message to avoid double formatting
+            if original_msg.startswith("TERMINAL:"):
+                # Just clean and pass through
+                record.msg = original_msg
             else:
-                record.msg = f"{log_symbol} {original_msg}"
+                if 'LLM' in original_msg:
+                    record.msg = f"{LogSymbols.MODEL} {original_msg}"
+                elif 'API' in original_msg:
+                    record.msg = f"{LogSymbols.API} {original_msg}"
+                elif 'TEST' in original_msg:
+                    record.msg = f"{LogSymbols.TEST} {original_msg}"
+                else:
+                    record.msg = f"{log_symbol} {original_msg}"
         
         record.formatted = True
         formatted_message = super().format(record)
@@ -150,10 +197,11 @@ class FileFormatter(logging.Formatter):
         # Restore original values
         record.levelname = original_levelname
         record.msg = original_msg
-        delattr(record, 'formatted') if hasattr(record, 'formatted') else None
+        if hasattr(record, 'formatted'):
+            delattr(record, 'formatted')
         
-        # Strip ANSI escape sequences for file output
-        return ANSI_ESCAPE_PATTERN.sub('', formatted_message)
+        # Clean the message of ANSI and emojis
+        return clean_text(formatted_message)
 
 class StdoutInterceptor(io.TextIOBase):
     """Class to intercept stdout/stderr and log it."""
@@ -163,38 +211,49 @@ class StdoutInterceptor(io.TextIOBase):
         self.level = level
         self.buffer = ""
         self.in_logging = False  # To prevent recursive logging
+        self.thread_local_context = {}  # To track context per thread
 
     def write(self, text: str) -> int:
-        # Prevent recursive logging - don't log if we're already in a logging context
+        """
+        Write text to the original stream and capture it for logging.
+        Returns the number of characters written.
+        """
         if self.in_logging:
+            # Prevent recursion when logging is calling write
             return self.original_stream.write(text)
         
-        self.in_logging = True
         try:
-            if text.strip():  # Only log non-empty lines
-                # Clean the text of ANSI escape sequences for comparison and logging
-                clean_text = ANSI_ESCAPE_PATTERN.sub('', text)
-                
-                # Skip if this appears to be a log message (to avoid duplicates)
-                if not (clean_text.startswith("17:") and "│" in clean_text[:20]):
-                    self.buffer += text
-                    if '\n' in text:
-                        lines = self.buffer.split('\n')
-                        for line in lines[:-1]:  # Process all complete lines
-                            if line.strip():  # Skip empty lines
-                                # Generate a clean version for logging and hash for deduplication
-                                clean_line = ANSI_ESCAPE_PATTERN.sub('', line.rstrip())
-                                # Skip logging if this line appears to be a log formatting artifact
-                                if clean_line and not clean_line.startswith("17:") and "│" not in clean_line[:20]:
-                                    # Only log if we haven't logged this exact message before
-                                    msg_hash = f"{clean_line}"
-                                    if msg_hash not in LOGGED_MESSAGES:
-                                        LOGGED_MESSAGES.add(msg_hash)
-                                        self.logger.log(self.level, f"TERMINAL: {clean_line}")
-                        self.buffer = lines[-1]  # Keep the last incomplete line
-                
-            # Always write to the original stream
-            return self.original_stream.write(text)
+            self.in_logging = True
+            
+            # Clean the text to remove emojis and ANSI codes before logging
+            # First clean the text to make it Windows-compatible
+            clean_message = clean_text(text)
+            
+            # Try to write the original text, but fall back to cleaned text if it fails
+            try:
+                result = self.original_stream.write(text)
+            except UnicodeEncodeError:
+                # If writing with emojis fails, write the cleaned version
+                result = self.original_stream.write(clean_message)
+            
+            # Process the message for logging
+            # Skip if this appears to be a log message (to avoid duplicates)
+            if not (re.match(r'\d{2}:\d{2}:\d{2}', clean_message) and "|" in clean_message[:20]):
+                self.buffer += clean_message
+                if '\n' in self.buffer:
+                    lines = self.buffer.split('\n')
+                    for line in lines[:-1]:  # Process all complete lines
+                        if line.strip():  # Skip empty lines
+                            # Skip logging if this line appears to be a log formatting artifact
+                            if not (re.match(r'\d{2}:\d{2}:\d{2}', line) and "|" in line[:20]):
+                                # Only log if we haven't logged this exact message before
+                                msg_hash = f"{line}"
+                                if msg_hash not in LOGGED_MESSAGES:
+                                    LOGGED_MESSAGES.add(msg_hash)
+                                    self.logger.log(self.level, f"TERMINAL: {line}")
+                    self.buffer = lines[-1]  # Keep the last incomplete line
+        
+            return result
         finally:
             self.in_logging = False
 
@@ -203,12 +262,14 @@ class StdoutInterceptor(io.TextIOBase):
         if self.buffer.strip() and not self.in_logging:
             self.in_logging = True
             try:
-                clean_buffer = ANSI_ESCAPE_PATTERN.sub('', self.buffer.rstrip())
-                # Only log if we haven't logged this exact message before
-                msg_hash = f"{clean_buffer}"
-                if msg_hash not in LOGGED_MESSAGES and not clean_buffer.startswith("17:") and "│" not in clean_buffer[:20]:
-                    LOGGED_MESSAGES.add(msg_hash)
-                    self.logger.log(self.level, f"TERMINAL: {clean_buffer}")
+                clean_buffer = clean_text(self.buffer.rstrip())
+                # Only log if we haven't logged this exact message before and it doesn't look like a log line
+                if (clean_buffer and not re.match(r'\d{2}:\d{2}:\d{2}', clean_buffer) 
+                    and "|" not in clean_buffer[:20]):
+                    msg_hash = f"{clean_buffer}"
+                    if msg_hash not in LOGGED_MESSAGES:
+                        LOGGED_MESSAGES.add(msg_hash)
+                        self.logger.log(self.level, f"TERMINAL: {clean_buffer}")
                 self.buffer = ""
             finally:
                 self.in_logging = False
@@ -248,7 +309,7 @@ class Logger:
         # Create console handler with colored formatter
         console_handler = logging.StreamHandler(sys.stdout)
         console_formatter = ConsoleFormatter(
-            fmt='%(asctime)s │ %(levelname)s │ %(name)-12s │ %(message)s',
+            fmt='%(asctime)s | %(levelname)s | %(name)-12s | %(message)s',
             datefmt='%H:%M:%S'
         )
         console_handler.setFormatter(console_formatter)
@@ -260,7 +321,7 @@ class Logger:
             try:
                 file_handler = logging.FileHandler(log_file, encoding='utf-8')
                 file_formatter = FileFormatter(
-                    fmt='%(asctime)s │ %(levelname)-7s │ %(name)-12s │ %(message)s',
+                    fmt='%(asctime)s | %(levelname)-7s | %(name)-12s | %(message)s',
                     datefmt='%H:%M:%S'
                 )
                 file_handler.setFormatter(file_formatter)
