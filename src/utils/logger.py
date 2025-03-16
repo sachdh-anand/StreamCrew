@@ -246,24 +246,11 @@ class StdoutInterceptor(io.TextIOBase):
                         if line.strip():  # Skip empty lines
                             # Skip logging if this line appears to be a log formatting artifact
                             if not (re.match(r'\d{2}:\d{2}:\d{2}', line) and "|" in line[:20]):
-                                # Skip warnings about pydantic and pkg_resources deprecation
-                                skip_patterns = [
-                                    "PydanticDeprecatedSince20", 
-                                    "pkg_resources is deprecated",
-                                    "Deprecated call to",
-                                    "deprecated, use ConfigDict instead",
-                                    "validators are deprecated",
-                                    "@validator"
-                                ]
-                                
-                                should_skip = any(pattern in line for pattern in skip_patterns)
-                                
-                                # Only log if we haven't logged this exact message before and it's not a warning to skip
-                                if not should_skip:
-                                    msg_hash = f"{line}"
-                                    if msg_hash not in LOGGED_MESSAGES:
-                                        LOGGED_MESSAGES.add(msg_hash)
-                                        self.logger.log(self.level, f"TERMINAL: {line}")
+                                # Only log if we haven't logged this exact message before
+                                msg_hash = f"{line}"
+                                if msg_hash not in LOGGED_MESSAGES:
+                                    LOGGED_MESSAGES.add(msg_hash)
+                                    self.logger.log(self.level, f"TERMINAL: {line}")
                     self.buffer = lines[-1]  # Keep the last incomplete line
         
             return result
@@ -279,24 +266,10 @@ class StdoutInterceptor(io.TextIOBase):
                 # Only log if we haven't logged this exact message before and it doesn't look like a log line
                 if (clean_buffer and not re.match(r'\d{2}:\d{2}:\d{2}', clean_buffer) 
                     and "|" not in clean_buffer[:20]):
-                    # Skip warnings about pydantic and pkg_resources deprecation
-                    skip_patterns = [
-                        "PydanticDeprecatedSince20", 
-                        "pkg_resources is deprecated",
-                        "Deprecated call to",
-                        "deprecated, use ConfigDict instead",
-                        "validators are deprecated",
-                        "@validator"
-                    ]
-                    
-                    should_skip = any(pattern in clean_buffer for pattern in skip_patterns)
-                    
-                    # Only log if it's not a warning to skip
-                    if not should_skip:
-                        msg_hash = f"{clean_buffer}"
-                        if msg_hash not in LOGGED_MESSAGES:
-                            LOGGED_MESSAGES.add(msg_hash)
-                            self.logger.log(self.level, f"TERMINAL: {clean_buffer}")
+                    msg_hash = f"{clean_buffer}"
+                    if msg_hash not in LOGGED_MESSAGES:
+                        LOGGED_MESSAGES.add(msg_hash)
+                        self.logger.log(self.level, f"TERMINAL: {clean_buffer}")
                 self.buffer = ""
             finally:
                 self.in_logging = False

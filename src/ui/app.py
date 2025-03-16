@@ -265,7 +265,7 @@ if 'last_run_time' not in st.session_state:
     st.session_state.first_load = True  # Track if this is the first load
 
 # Research Input Section
-st.markdown('<p class="subheader">Research Focus</p>', unsafe_allow_html=True)
+st.markdown('<p class="subheader">🔍 Research Focus</p>', unsafe_allow_html=True)
 
 # Handle input changes with a callback
 def on_text_change():
@@ -369,7 +369,7 @@ if st.button("🚀 Run Research Agent", help="Click to start the research proces
         # Start the research process with the topic
         process = run_research_agent(research_topic)
         if process:
-            with st.spinner(f'Researching "{research_topic}"...'):
+            with st.spinner(f'🔎 Researching "{research_topic}"...'):
                 # Simulate progress while the process is running
                 for i in range(100):
                     time.sleep(0.1)  # Adjust the sleep time based on your needs
@@ -403,7 +403,7 @@ research_file, keynote_file = create_output_paths(display_topic)
 
 # Display outputs in columns
 with col1:
-    st.markdown('<p class="subheader">Research Summary</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subheader">📊 Research Summary</p>', unsafe_allow_html=True)
     with st.container():
         st.markdown('<div class="output-container">', unsafe_allow_html=True)
         research_content = read_output_file(research_file)
@@ -424,7 +424,7 @@ with col1:
         st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
-    st.markdown('<p class="subheader">Keynote Speech</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subheader">🎤 Keynote Speech</p>', unsafe_allow_html=True)
     with st.container():
         st.markdown('<div class="output-container">', unsafe_allow_html=True)
         keynote_content = read_output_file(keynote_file)
