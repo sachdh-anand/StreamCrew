@@ -55,8 +55,8 @@ def test_openrouter_connection():
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {api_key}",
-            "HTTP-Referer": "https://github.com/StreamCrew/StreamCrew",
-            "X-Title": "StreamCrew AI Research Platform"
+            "HTTP-Referer": "https://github.com/KeynoteGenie/KeynoteGenie",
+            "X-Title": "KeynoteGenie AI Research Platform"
         }
         
         payload = {

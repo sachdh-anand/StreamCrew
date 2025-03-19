@@ -286,7 +286,7 @@ class Logger:
         """Get the default log file path."""
         log_dir = Path("logs")
         log_dir.mkdir(exist_ok=True)
-        return str(log_dir / f"StreamCrew_{datetime.now().strftime('%Y%m%d-%H%M%S')}.log")
+        return str(log_dir / f"KeynoteGenie_{datetime.now().strftime('%Y%m%d-%H%M%S')}.log")
 
     @staticmethod
     def setup(log_file: Optional[str] = None) -> logging.Logger:
@@ -345,7 +345,7 @@ class Logger:
         
         # Log startup
         divider = f"{LogSymbols.DIVIDER * 50}"
-        root_logger.info(f"StreamCrew Starting {LogSymbols.START}")
+        root_logger.info(f"KeynoteGenie Starting {LogSymbols.START}")
         root_logger.info(divider)
         
         return root_logger

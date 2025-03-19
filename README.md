@@ -1,16 +1,16 @@
-# StreamCrew 🔬
+# KeynoteGenie 🔬
 
-StreamCrew is a quantum computing research and presentation platform that leverages AI to automate the research process and generate engaging keynote speeches. Built with CrewAI and Streamlit, this application allows you to explore any research topic with the click of a button.
+KeynoteGenie is an AI-powered research assistant that automatically researches any topic and prepares professional keynote speeches. Built with CrewAI and Streamlit, this application streamlines what would normally take hours of work into a single click.
 
-![StreamCrew Interface](https://images.unsplash.com/photo-1635070041078-e363dbe005cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80)
+![KeynoteGenie Interface](assets/KeynoteGenie.png)
 
 ## ✨ Features
 
-- **AI-Powered Research**: Automatically searches the web for the latest information on your topic
-- **Keynote Speech Generation**: Creates professional, ready-to-deliver speeches based on research findings
-- **Modern UI**: Clean, responsive interface with real-time progress tracking
-- **Customizable Topics**: Research any topic of interest, with quantum computing as the default
-- **Persistent Results**: All research summaries and speeches are saved for future reference
+- **Automated Research**: Scours the web for the latest information on your chosen topic
+- **Keynote Speech Generation**: Transforms research findings into ready-to-deliver professional speeches
+- **End-to-End Solution**: Handles the entire process from topic selection to final presentation
+- **Topic Flexibility**: Research any subject - from technology to business, science to arts
+- **Time-Saving**: Condenses hours of research and writing into minutes
 
 ## 🚀 Getting Started
 
@@ -23,8 +23,8 @@ StreamCrew is a quantum computing research and presentation platform that levera
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/StreamCrew.git
-   cd StreamCrew
+   git clone https://github.com/yourusername/KeynoteGenie.git
+   cd KeynoteGenie
    ```
 
 2. Create and activate a virtual environment:
@@ -67,7 +67,7 @@ The application will be available at http://localhost:8501
 
 ## 📊 How It Works
 
-StreamCrew uses a two-agent system powered by CrewAI:
+KeynoteGenie uses a two-agent system powered by CrewAI:
 
 1. **Research Agent**: Searches the internet for the latest information on your chosen topic using the SerperDevTool
 2. **Writing Agent**: Transforms the research findings into a coherent, engaging keynote speech
@@ -77,7 +77,7 @@ The process is fully automated and provides detailed logging of each step, inclu
 ## 📁 Project Structure
 
 ```
-StreamCrew/
+KeynoteGenie/
 ├── src/                      # Source code
 │   ├── agents/               # AI agent definitions
 │   ├── config/               # Configuration files
@@ -93,19 +93,19 @@ StreamCrew/
 
 ## 💻 Usage Examples
 
-1. **Basic Research**:
-   - Enter "Quantum Computing Applications in Finance" in the research field
+1. **Technology Research**:
+   - Enter "Recent AI breakthroughs and their business applications" in the research field
    - Click "Run Research Agent"
    - Wait for the process to complete
    - Review the research summary and keynote speech
 
-2. **Custom Topics**:
-   - The system can research any topic, not just quantum computing
-   - Try researching emerging technologies, scientific advances, or business trends
+2. **Versatile Topics**:
+   - The system can research virtually any topic you're interested in
+   - Try researching emerging technologies, scientific advances, business trends, or cultural phenomena
 
 ## 🛠️ Development
 
-To contribute to StreamCrew:
+To contribute to KeynoteGenie:
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
@@ -119,7 +119,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 👥 Contributors
 
-- StreamCrew Team
+- KeynoteGenie Team
 
 ## 🔗 References
 
